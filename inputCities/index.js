@@ -1,26 +1,5 @@
-'use strict';
-
-// const addLoader = () => {
-//     const loader = document.createElement('div');
-//     loader.classList.add('loader');
-//     loader.insertAdjacentHTML('beforeend',  `
-//         <div class="sk-cube-grid">
-//             <div class="sk-cube sk-cube1"></div>
-//             <div class="sk-cube sk-cube2"></div>
-//             <div class="sk-cube sk-cube3"></div>
-//             <div class="sk-cube sk-cube4"></div>
-//             <div class="sk-cube sk-cube5"></div>
-//             <div class="sk-cube sk-cube6"></div>
-//             <div class="sk-cube sk-cube7"></div>
-//             <div class="sk-cube sk-cube8"></div>
-//             <div class="sk-cube sk-cube9"></div>
-//         </div>`)
-
-//     return loader;
-// }
-
-
 document.addEventListener('DOMContentLoaded', () => {
+    'use strict';
 
     const input = document.getElementById('select-cities'),
         btn = document.querySelector('.button'),
@@ -30,29 +9,85 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.style.pointerEvents = 'none';
 
     const url = './db/db_cities.json';
-    // info получаем данные из json-файла
-    const getData = (url, render, func) => {
-        
-        return fetch(url)
-        .then( response => {
-            if(response.ok){
-                return response.json();;
-            } else {
-                throw new Error(response.statusText);
-            }
-        })
-        .then( response => {
-            render(response);
-            return response;
-        } )
-        .then ( func )
-        .catch( err => {
-            console.log(err);
-        });
 
+    const getLocale = () => {
+        let locale = prompt('Введите локализацию: ru, en, de').toLowerCase().trim();
+
+        while (locale !== 'en' && locale !== 'ru' && locale !== 'de') {
+            locale = prompt('Введите локализацию: ru, en, de').toLowerCase().trim();
+        }
+        return locale.toUpperCase();
     }
 
-    getData(url, (dbData) => renderList(dbData), (dbData) => console.log(dbData.RU))
+
+    // info создает куки
+    const setCookie = (key, value, year, month, day, path, domain, secure) => {
+        let cookieStr = key + '=' + encodeURI(value); //key не кодирую, так как они на англ
+        if(year){
+            const expires = new Date(year, month-1, day);
+            cookieStr += '; expires=' + expires.toGMTString();
+        }
+        cookieStr += path ? '; path=' + encodeURI(path) : '';
+        cookieStr += domain ? '; domain=' + encodeURI(domain) : '';
+        cookieStr += secure ? '; secure=' + secure : '';
+
+        document.cookie = cookieStr;
+    }
+
+    // info функция ищет куки по имени, если его нет, возвращает undefined
+    const getCookie = (name) => {
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + 
+            name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+
+    // info если куки нет, то записывает его
+    if(!getCookie('locale')){
+        setCookie('locale', getLocale(), '2022', '01', '01');
+    }
+    
+
+    // info отправляет запрос на сервер
+    // in: url - json-файл, body - ключ локали: en, ru, ge
+    const postData = (url, body) => {
+        return fetch(url, {
+            method: 'POST', 
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+    }
+    
+    let body = getCookie('locale');
+
+    // объявляю, что есть данные
+    let data;
+
+    // если их нет, то отправляю post-запрос
+    if(!data) {
+        postData(url, body)
+        .then( response => {
+            if (response.status !== 200) {
+                throw new Error(response.status);
+            }
+            return response.json();
+        })
+        .then( response => {
+            data = response[body];
+            renderList(data);
+            // записываю данные в localStorage
+            localStorage.setItem('localeData', JSON.stringify(data));
+        })
+        .catch ( err => {
+            console.log(err);
+        });
+    } else {
+        // info получаю данные из localStorage
+        data = JSON.parse(localStorage.getItem('localeData'));
+        renderList(data);
+    }
+
 
     // in: принимает БД - со всеми ключами
     const renderList = (dbData) => {
@@ -145,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // очищаю список, если он уже был создан
                 countryList.innerHTML = '';
+                
+                // ! не получает сразу country
+                console.log(country)
+                setOrder(country);
 
                 // ? country - массив
                 country.forEach( countryItem => {
@@ -157,14 +196,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-
         // info при клике на инпут открывается дефолтный селект с топом-3
         input.addEventListener('focus', () => {
             // создаю дефолтный список, только если не открыт селект
             if (document.querySelector('.dropdown-lists__list--select').style.display !== 'block') {
 
                 openBlock('.dropdown-lists__list--default');
-                createList(dbData.RU, 'default');
+                createList(dbData, 'default');
             }
         });
 
@@ -176,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // чтобы не зависело от регистра
             let searchedName = input.value.toLowerCase();
 
-            let searchedCityArr = searchCity(searchedName, dbData.RU);
+            let searchedCityArr = searchCity(searchedName, dbData);
 
             openBlock('.close-button');
 
@@ -209,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // ? блок с переключением списков
             // отлавливаю, что клик произошел в дефолтном списке по клику на строчку страны
             if( target.closest('.dropdown-lists__total-line') && target.closest('.dropdown-lists__list--default') ){
-                let searchCountry = searchId(target.closest('.dropdown-lists__total-line').dataset.id, dbData.RU);
+                let searchCountry = searchId(target.closest('.dropdown-lists__total-line').dataset.id, dbData);
 
                 createList(searchCountry, 'select');
                 openBlock('.dropdown-lists__list--select');
@@ -225,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if(target.closest('.dropdown-lists__line')){
                 // нахожу ссылку города в вики
-                const cityLink = searchCityLink(target.closest('.dropdown-lists__line').dataset.cityName, dbData.RU);
+                const cityLink = searchCityLink(target.closest('.dropdown-lists__line').dataset.cityName, dbData);
                 btn.href = cityLink;
                 // включаю переход по ссылке
                 btn.style.pointerEvents = 'auto';
@@ -255,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     }
+
 
     // info открывает элемент по селектору, задавая ему значение 'block'
     const openBlock = selector => {
@@ -304,50 +343,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return citiesArr;
     }
 
-    // info анимация появления
-    const slideInAnimation = ({timing, draw, duration}) => {
-
-        let start = performance.now();
-
-        requestAnimationFrame(function slideInAnimation(time) {
-            // timeFraction изменяется от 0 до 1
-            let timeFraction = (time - start) / duration;
-            if (timeFraction > 1) timeFraction = 1;
-
-            // вычисление текущего состояния анимации
-            let progress = timing(timeFraction);
-
-            draw(progress); // отрисовать её
-
-            if (timeFraction < 1) {
-            requestAnimationFrame(slideInAnimation);
-            }
-
-        });
-
+    // info перемещает элемент массива с одного индекса на другой
+    const arrayMove = (arr, fromIndex, toIndex) => {
+        let element = arr[fromIndex];
+        arr.splice(fromIndex, 1);
+        arr.splice(toIndex, 0, element);
     }
 
-    // info анимация исчезновения
-    const slideOutAnimation = ({timing, draw, duration}) => {
+    const setOrder = (country) => {
+        let index;
 
-        let start = performance.now();
+        if(getCookie('locale') === 'EN'){
+            index = country.findIndex( item => item.country === 'United Kingdom');
+            arrayMove(country, index, 0);
 
-        requestAnimationFrame(function slideOutAnimation(time) {
-            // timeFraction изменяется от 0 до 1
-            let timeFraction = (time - start) / duration;
-            if (timeFraction > 1) timeFraction = 1;
+        } else if (getCookie('locale') === 'DE'){
+            index = country.findIndex( item => item.country === 'Deutschland');
+            arrayMove(country, index, 0);
 
-            // вычисление текущего состояния анимации
-            let progress = timing(timeFraction);
+        } else if (getCookie('locale') === 'RU'){
+            index = country.findIndex( item => item.country === 'Россия');
+            arrayMove(country, index, 0);
+        }
 
-            draw(progress); // отрисовать её
-
-            if (timeFraction < 1) {
-            requestAnimationFrame(slideOutAnimation);
-            }
-
-        });
-
+        return country;
     }
 
 });
