@@ -1,5 +1,26 @@
+'use strict';
+
+// const addLoader = () => {
+//     const loader = document.createElement('div');
+//     loader.classList.add('loader');
+//     loader.insertAdjacentHTML('beforeend',  `
+//         <div class="sk-cube-grid">
+//             <div class="sk-cube sk-cube1"></div>
+//             <div class="sk-cube sk-cube2"></div>
+//             <div class="sk-cube sk-cube3"></div>
+//             <div class="sk-cube sk-cube4"></div>
+//             <div class="sk-cube sk-cube5"></div>
+//             <div class="sk-cube sk-cube6"></div>
+//             <div class="sk-cube sk-cube7"></div>
+//             <div class="sk-cube sk-cube8"></div>
+//             <div class="sk-cube sk-cube9"></div>
+//         </div>`)
+
+//     return loader;
+// }
+
+
 document.addEventListener('DOMContentLoaded', () => {
-    'use strict';
 
     const input = document.getElementById('select-cities'),
         btn = document.querySelector('.button'),
@@ -9,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.style.pointerEvents = 'none';
 
     const url = './db/db_cities.json';
-    // получаем данные из json-файла
+    // info получаем данные из json-файла
     const getData = (url, render, func) => {
         
         return fetch(url)
@@ -33,12 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     getData(url, (dbData) => renderList(dbData), (dbData) => console.log(dbData.RU))
 
-    // вход: принимает БД - со всеми ключами
+    // in: принимает БД - со всеми ключами
     const renderList = (dbData) => {
 
-        // ? создает HTML-элемент для каждого города
-        // вход: объект, который содержится в массиве cities
-        // выход: HTML-элемент в верстке
+        // info создает HTML-элемент для каждого города
+        // in: объект, который содержится в массиве cities
+        // out: HTML-элемент в верстке
         const createCityElem = (cityObj) => {
             const cityElem = document.createElement('div');
             cityElem.classList.add('dropdown-lists__line');
@@ -52,9 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return cityElem;
         }
 
-        // ? создает HTML-элемент для каждой страны (это строчка над городами)
-        // вход: объект, который содержится в массиве стран
-        // выход: HTML-элемент в верстке
+        // info создает HTML-элемент для каждой страны (это строчка над городами)
+        // in: объект, который содержится в массиве стран
+        // out: HTML-элемент в верстке
         const createCountryElem = (countryObj) => {
             const countryElem = document.createElement('div');
             countryElem.classList.add('dropdown-lists__total-line');
@@ -68,12 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return countryElem;
         }
 
-        // ? создает HTML-элемент для каждой страны (это блок, в котором список городов и может быть верхняя строчка с названием страны)
-        // вход: 
+        // info создает HTML-элемент для каждой страны (это блок, в котором список городов и может быть верхняя строчка с названием страны)
+        // in: 
         // объект, который содержится в массиве стран, 
         // flag: если total, то создает над списком элементов строку со страной, 
         // num - количество выводимых городов
-        // выход: HTML-элемент в верстке
+        // out: HTML-элемент в верстке
         const createCountryBlock = (countryObj, flag, num) => {
             const countryBlock = document.createElement('div');
             countryBlock.classList.add('dropdown-lists__countryBlock');
@@ -97,10 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return countryBlock;
         }
 
-        // ? создает список в верстке
+        // info создает список в верстке
         // если массив - нужно указать индекс объекта из БД
-        // вход: массив со странами (в случае default или объект в остальных случаях) и вид списка: default, select, autocomplete
-        // выход: HTML-список
+        // in: массив со странами (в случае default или объект в остальных случаях) и вид списка: default, select, autocomplete
+        // out: HTML-список
         const createList = (country, selector) => {
             const countryList = document.querySelector(`.dropdown-lists__list--${selector} .dropdown-lists__col`);
 
@@ -137,10 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
 
-        // при клике на инпут открывается дефолтный селект с топом-3
+        // info при клике на инпут открывается дефолтный селект с топом-3
         input.addEventListener('focus', () => {
-            // создаб дефолтный список, только если не открыт селект
+            // создаю дефолтный список, только если не открыт селект
             if (document.querySelector('.dropdown-lists__list--select').style.display !== 'block') {
+
                 openBlock('.dropdown-lists__list--default');
                 createList(dbData.RU, 'default');
             }
@@ -166,8 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openBlock('.dropdown-lists__list--autocomplete');
             createList(searchedCityArr, 'autocomplete');
             
-
-
             // когда значение пустое
             if(input.value === ''){
 
@@ -187,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = e.target;
 
             // ? блок с переключением списков
-
             // отлавливаю, что клик произошел в дефолтном списке по клику на строчку страны
             if( target.closest('.dropdown-lists__total-line') && target.closest('.dropdown-lists__list--default') ){
                 let searchCountry = searchId(target.closest('.dropdown-lists__total-line').dataset.id, dbData.RU);
@@ -235,30 +254,26 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.pointerEvents = 'none';
         });
 
-
-
-
-
     }
 
-    // открывает элемент по селектору, задавая ему значение 'block'
+    // info открывает элемент по селектору, задавая ему значение 'block'
     const openBlock = selector => {
         const elem = document.querySelector(selector);
         elem.style.display = 'block';
     };
 
-    // скрывает элемент по селектору, задавая ему значение 'none'
+    // info скрывает элемент по селектору, задавая ему значение 'none'
     const closeBlock = selector => {
         const elem = document.querySelector(selector);
         elem.style.display = 'none';
     };
 
-    // ищет объект из БД по дата-атрибуту
+    // info ищет объект из БД по дата-атрибуту
     const searchId = (str, arr) => {
         return arr.find(item => item.country === str);
     }
 
-    // ищет ссылку города в БД
+    // info ищет ссылку города в БД
     const searchCityLink = (str, arr) => {
         let cityObj = {};
 
@@ -272,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return cityObj.link;
     }
 
-    // ищет название города
+    // info ищет название города
     // возвращает массив объектов
     const searchCity = (str, arr) => {
         let citiesArr = [];
@@ -289,7 +304,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return citiesArr;
     }
 
+    // info анимация появления
+    const slideInAnimation = ({timing, draw, duration}) => {
 
+        let start = performance.now();
 
+        requestAnimationFrame(function slideInAnimation(time) {
+            // timeFraction изменяется от 0 до 1
+            let timeFraction = (time - start) / duration;
+            if (timeFraction > 1) timeFraction = 1;
+
+            // вычисление текущего состояния анимации
+            let progress = timing(timeFraction);
+
+            draw(progress); // отрисовать её
+
+            if (timeFraction < 1) {
+            requestAnimationFrame(slideInAnimation);
+            }
+
+        });
+
+    }
+
+    // info анимация исчезновения
+    const slideOutAnimation = ({timing, draw, duration}) => {
+
+        let start = performance.now();
+
+        requestAnimationFrame(function slideOutAnimation(time) {
+            // timeFraction изменяется от 0 до 1
+            let timeFraction = (time - start) / duration;
+            if (timeFraction > 1) timeFraction = 1;
+
+            // вычисление текущего состояния анимации
+            let progress = timing(timeFraction);
+
+            draw(progress); // отрисовать её
+
+            if (timeFraction < 1) {
+            requestAnimationFrame(slideOutAnimation);
+            }
+
+        });
+
+    }
 
 });
+
