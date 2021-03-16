@@ -1,26 +1,129 @@
 'use strict';
 
-// const addLoader = () => {
-//     const loader = document.createElement('div');
-//     loader.classList.add('loader');
-//     loader.insertAdjacentHTML('beforeend',  `
-//         <div class="sk-cube-grid">
-//             <div class="sk-cube sk-cube1"></div>
-//             <div class="sk-cube sk-cube2"></div>
-//             <div class="sk-cube sk-cube3"></div>
-//             <div class="sk-cube sk-cube4"></div>
-//             <div class="sk-cube sk-cube5"></div>
-//             <div class="sk-cube sk-cube6"></div>
-//             <div class="sk-cube sk-cube7"></div>
-//             <div class="sk-cube sk-cube8"></div>
-//             <div class="sk-cube sk-cube9"></div>
-//         </div>`)
+// стили прелоадера
+const addStyles = () => {
+    let style = document.getElementById('preloader-style');
 
-//     return loader;
-// }
+    if(!style){
+        style = document.createElement('style');
+        style.id = 'preloader-style';
+    }
+
+    style.textContent = `
+        .loader {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(42, 42, 42, .4);
+            z-index: 51;
+            transition: 1s all;
+            visibility: visible;
+        }
+        
+        .sk-cube-grid {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            margin: 100px auto;
+        }
+        
+        .sk-cube-grid .sk-cube {
+            width: 33%;
+            height: 33%;
+            background-color: #039;
+            float: left;
+            -webkit-animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out;
+                    animation: sk-cubeGridScaleDelay 1.3s infinite ease-in-out; 
+        }
+        .sk-cube-grid .sk-cube1 {
+            -webkit-animation-delay: 0.2s;
+                    animation-delay: 0.2s; }
+        .sk-cube-grid .sk-cube2 {
+            -webkit-animation-delay: 0.3s;
+                    animation-delay: 0.3s; }
+        .sk-cube-grid .sk-cube3 {
+            -webkit-animation-delay: 0.4s;
+                    animation-delay: 0.4s; }
+        .sk-cube-grid .sk-cube4 {
+            -webkit-animation-delay: 0.1s;
+                    animation-delay: 0.1s; }
+        .sk-cube-grid .sk-cube5 {
+            -webkit-animation-delay: 0.2s;
+                    animation-delay: 0.2s; }
+        .sk-cube-grid .sk-cube6 {
+            -webkit-animation-delay: 0.3s;
+                    animation-delay: 0.3s; }
+        .sk-cube-grid .sk-cube7 {
+            -webkit-animation-delay: 0s;
+                    animation-delay: 0s; }
+        .sk-cube-grid .sk-cube8 {
+            -webkit-animation-delay: 0.1s;
+                    animation-delay: 0.1s; }
+        .sk-cube-grid .sk-cube9 {
+            -webkit-animation-delay: 0.2s;
+                    animation-delay: 0.2s; }
+        
+        @-webkit-keyframes sk-cubeGridScaleDelay {
+            0%, 70%, 100% {
+            -webkit-transform: scale3D(1, 1, 1);
+                    transform: scale3D(1, 1, 1);
+            } 35% {
+            -webkit-transform: scale3D(0, 0, 1);
+                    transform: scale3D(0, 0, 1); 
+            }
+        }
+        
+        @keyframes sk-cubeGridScaleDelay {
+            0%, 70%, 100% {
+            -webkit-transform: scale3D(1, 1, 1);
+                    transform: scale3D(1, 1, 1);
+            } 35% {
+            -webkit-transform: scale3D(0, 0, 1);
+                    transform: scale3D(0, 0, 1);
+            } 
+        }
+    `;
+
+    document.head.append(style);
+}
+
+// добавляение прелоадера в верстку
+const addLoader = () => {
+    const loader = document.createElement('div');
+    loader.classList.add('loader');
+    loader.insertAdjacentHTML('beforeend',  `
+        <div class="sk-cube-grid">
+            <div class="sk-cube sk-cube1"></div>
+            <div class="sk-cube sk-cube2"></div>
+            <div class="sk-cube sk-cube3"></div>
+            <div class="sk-cube sk-cube4"></div>
+            <div class="sk-cube sk-cube5"></div>
+            <div class="sk-cube sk-cube6"></div>
+            <div class="sk-cube sk-cube7"></div>
+            <div class="sk-cube sk-cube8"></div>
+            <div class="sk-cube sk-cube9"></div>
+        </div>`)
 
 
+    document.body.insertAdjacentElement('afterbegin', loader);
+}
+
+addStyles();
+addLoader();
+
+// когда дом-дерево загружено
 document.addEventListener('DOMContentLoaded', () => {
+    
+    setTimeout(() => {
+        document.querySelector('.loader').style.display = 'none';
+    }, 700)
+    
+
 
     const input = document.getElementById('select-cities'),
         btn = document.querySelector('.button'),
@@ -31,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const url = './db/db_cities.json';
     // info получаем данные из json-файла
-    const getData = (url, render, func) => {
+    const getData = (url, render) => {
         
         return fetch(url)
         .then( response => {
@@ -43,23 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then( response => {
             render(response);
-            return response;
         } )
-        .then ( func )
         .catch( err => {
             console.log(err);
         });
 
     }
 
-    getData(url, (dbData) => renderList(dbData), (dbData) => console.log(dbData.RU))
+    getData(url, (dbData) => renderList(dbData));
 
     // in: принимает БД - со всеми ключами
     const renderList = (dbData) => {
+        const defaultList = document.querySelector('.dropdown-lists__list--default'),
+            selectList = document.querySelector('.dropdown-lists__list--select'),
+            autocompleteList = document.querySelector('.dropdown-lists__list--autocomplete'),
+            label = document.querySelector('.label');
 
-        // info создает HTML-элемент для каждого города
-        // in: объект, который содержится в массиве cities
-        // out: HTML-элемент в верстке
         const createCityElem = (cityObj) => {
             const cityElem = document.createElement('div');
             cityElem.classList.add('dropdown-lists__line');
@@ -73,9 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return cityElem;
         }
 
-        // info создает HTML-элемент для каждой страны (это строчка над городами)
-        // in: объект, который содержится в массиве стран
-        // out: HTML-элемент в верстке
         const createCountryElem = (countryObj) => {
             const countryElem = document.createElement('div');
             countryElem.classList.add('dropdown-lists__total-line');
@@ -89,12 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return countryElem;
         }
 
-        // info создает HTML-элемент для каждой страны (это блок, в котором список городов и может быть верхняя строчка с названием страны)
-        // in: 
-        // объект, который содержится в массиве стран, 
-        // flag: если total, то создает над списком элементов строку со страной, 
-        // num - количество выводимых городов
-        // out: HTML-элемент в верстке
         const createCountryBlock = (countryObj, flag, num) => {
             const countryBlock = document.createElement('div');
             countryBlock.classList.add('dropdown-lists__countryBlock');
@@ -118,10 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return countryBlock;
         }
 
-        // info создает список в верстке
-        // если массив - нужно указать индекс объекта из БД
-        // in: массив со странами (в случае default или объект в остальных случаях) и вид списка: default, select, autocomplete
-        // out: HTML-список
         const createList = (country, selector) => {
             const countryList = document.querySelector(`.dropdown-lists__list--${selector} .dropdown-lists__col`);
 
@@ -157,45 +246,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-
         // info при клике на инпут открывается дефолтный селект с топом-3
         input.addEventListener('focus', () => {
-            // создаю дефолтный список, только если не открыт селект
-            if (document.querySelector('.dropdown-lists__list--select').style.display !== 'block') {
 
-                openBlock('.dropdown-lists__list--default');
+            // создаю дефолтный список, только если не открыт селект
+            if (selectList.style.display !== 'block') {
+
+                openBlock(defaultList);
                 createList(dbData.RU, 'default');
             }
         });
 
         input.addEventListener('blur', () =>{
-            closeBlock('.label');
+            closeBlock(label);
         })
 
+        // ? здесь autocomplete
+        // при вводе значений
         input.addEventListener('input', () => {
             // чтобы не зависело от регистра
             let searchedName = input.value.toLowerCase();
 
             let searchedCityArr = searchCity(searchedName, dbData.RU);
 
-            openBlock('.close-button');
+            openBlock(closeBtn);
 
             // закрываются все списки
-            closeBlock('.dropdown-lists__list--select');
-            closeBlock('.dropdown-lists__list--default');
+            closeBlock(selectList);
+            closeBlock(defaultList);
 
             // открывается список autocomplete
-            openBlock('.dropdown-lists__list--autocomplete');
+            openBlock(autocompleteList);
+            
             createList(searchedCityArr, 'autocomplete');
             
             // когда значение пустое
             if(input.value === ''){
 
-                closeBlock('.close-button');
+                closeBlock(closeBtn);
 
-                openBlock('.label');
-                openBlock('.dropdown-lists__list--default');
-                closeBlock('.dropdown-lists__list--autocomplete');
+                openBlock(label);
+                openBlock(defaultList);
+                closeBlock(autocompleteList);
                 // блокируем кнопку, если удаляем значение из инпута
                 btn.style.pointerEvents = 'none';
             }
@@ -211,18 +303,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if( target.closest('.dropdown-lists__total-line') && target.closest('.dropdown-lists__list--default') ){
                 let searchCountry = searchId(target.closest('.dropdown-lists__total-line').dataset.id, dbData.RU);
 
+                closeBlock(defaultList);
+
+                slideAnimation({
+                    duration: 900,
+                    timing(timeFraction){
+                        return timeFraction;
+                    },
+                    draw(progress){
+                        selectList.style.transform = `translate(${-100 *(1 - progress)}%)`;
+                        selectList.style.opacity = progress;
+                    }
+                });
+                openBlock(selectList);
+
+                
                 createList(searchCountry, 'select');
-                openBlock('.dropdown-lists__list--select');
-                closeBlock('.dropdown-lists__list--default');
+                
 
             // отлавливаю если клик произошел по списку селект и по названию страны
             } else if (target.closest('.dropdown-lists__total-line') && target.closest('.dropdown-lists__list--select')){
 
-                openBlock('.dropdown-lists__list--default');
-                closeBlock('.dropdown-lists__list--select');
+                closeBlock(selectList);
 
+                slideAnimation({
+                    duration: 900,
+                    timing(timeFraction){
+                        return timeFraction;
+                    },
+                    draw(progress){
+                        defaultList.style.transform = `translate(${100 *(1 - progress)}%)`;
+                        defaultList.style.opacity = progress;
+                    }
+                });
+                openBlock(defaultList);
+                
             }
 
+            // ? вставка ссылки в href
             if(target.closest('.dropdown-lists__line')){
                 // нахожу ссылку города в вики
                 const cityLink = searchCityLink(target.closest('.dropdown-lists__line').dataset.cityName, dbData.RU);
@@ -234,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // ? блок с вводом значений в инпут
             if (target.closest('.dropdown-lists__city') || target.closest('.dropdown-lists__country')){
                 // скрываю надпись лейбла
-                closeBlock('label');
+                closeBlock(label);
                 // показываю кнопку 'close'
-                openBlock('.close-button');
+                openBlock(closeBtn);
                 // заменяю значение инпута на текст элемента, по которому кликнули
                 input.value = target.textContent;
             }
@@ -246,26 +364,26 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn.addEventListener('click', () => {
             input.value = '';
             
-            closeBlock('.dropdown-lists__list--select');
-            closeBlock('.dropdown-lists__list--default');
+            closeBlock(selectList);
+            closeBlock(defaultList);
 
-            openBlock('.label');
+            openBlock(label);
             // блокируем кнопку, если удаляем значение из инпута
             btn.style.pointerEvents = 'none';
         });
 
     }
 
-    // info открывает элемент по селектору, задавая ему значение 'block'
-    const openBlock = selector => {
-        const elem = document.querySelector(selector);
+
+    // info открывает элемент, задавая ему значение 'block'
+    const openBlock = elem => {
         elem.style.display = 'block';
     };
-
-    // info скрывает элемент по селектору, задавая ему значение 'none'
-    const closeBlock = selector => {
-        const elem = document.querySelector(selector);
+    
+    // info скрывает элемент, задавая ему значение 'none'
+    const closeBlock = elem => {
         elem.style.display = 'none';
+
     };
 
     // info ищет объект из БД по дата-атрибуту
@@ -304,12 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return citiesArr;
     }
 
-    // info анимация появления
-    const slideInAnimation = ({timing, draw, duration}) => {
+    const slideAnimation = ({timing, draw, duration}) => {
 
         let start = performance.now();
 
-        requestAnimationFrame(function slideInAnimation(time) {
+        requestAnimationFrame(function slideAnimation(time) {
             // timeFraction изменяется от 0 до 1
             let timeFraction = (time - start) / duration;
             if (timeFraction > 1) timeFraction = 1;
@@ -320,35 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
             draw(progress); // отрисовать её
 
             if (timeFraction < 1) {
-            requestAnimationFrame(slideInAnimation);
+            requestAnimationFrame(slideAnimation);
             }
 
         });
 
     }
-
-    // info анимация исчезновения
-    const slideOutAnimation = ({timing, draw, duration}) => {
-
-        let start = performance.now();
-
-        requestAnimationFrame(function slideOutAnimation(time) {
-            // timeFraction изменяется от 0 до 1
-            let timeFraction = (time - start) / duration;
-            if (timeFraction > 1) timeFraction = 1;
-
-            // вычисление текущего состояния анимации
-            let progress = timing(timeFraction);
-
-            draw(progress); // отрисовать её
-
-            if (timeFraction < 1) {
-            requestAnimationFrame(slideOutAnimation);
-            }
-
-        });
-
-    }
-
 });
 
